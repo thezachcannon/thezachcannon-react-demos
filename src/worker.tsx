@@ -5,6 +5,7 @@ import { Document } from "@/app/Document";
 import { setCommonHeaders } from "@/app/headers";
 import { Home } from "@/app/pages/Home";
 import ActivityDemoPage from "./app/pages/ActivityDemo/ActivityDemoPage";
+import PokemonAsyncReactPage from "./app/pages/PokemonAsyncReact/PokemonAsyncReactPage";
 
 export type AppContext = {};
 
@@ -15,5 +16,6 @@ export default defineApp([
     ctx;
   },
   render(Document, [route("/", Home)]),
-  route("/activityDemo", [ActivityDemoPage])
+  route("/activityDemo", [ActivityDemoPage]),
+  route("/pokemonAsyncReact", [PokemonAsyncReactPage])
 ]);

@@ -8,9 +8,6 @@ const delay = (durationMs: number) => {
 const randomMs = () => Math.round(Math.random() * 1500);
 
 export const getTeamDetails = async (): Promise<Team[]> => {
-    console.log('fetching teams')
-    // Simulate an API call with randomized network delay between 0-1500ms
-    await delay(randomMs());
     return Object.values(teams);
 }
 

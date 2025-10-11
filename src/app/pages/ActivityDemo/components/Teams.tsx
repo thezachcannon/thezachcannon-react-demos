@@ -10,14 +10,10 @@ interface TeamsProps {
 
 const Teams: React.FC<TeamsProps> = ({ teams, onTeamClick, onHover }) => {
 	const _onHover = (team: Team) => () => {
-		if (onHover) {
-		console.log('hover')
-		onHover(team);
-		} 
+		if (onHover) onHover(team);
 	}
 
 	const _onClick = (team: Team) => () => {
-		console.log('click')
 		if (onTeamClick) onTeamClick(team);
 	}
 	return (
