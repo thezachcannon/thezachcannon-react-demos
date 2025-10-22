@@ -13,11 +13,12 @@ const randomTrashType = () => {
 }
 
 export const NotInMyBackyard = () => {
-    const piecesOfTrash = useMemo<TrashType[]>(() => Array.from({ length: 100 }, (_, i) => randomTrashType()), []);
+    const piecesOfTrash = useMemo<TrashType[]>(() => Array.from({ length: 10 }, (_, i) => randomTrashType()), []);
     const [piecesOfTrashLookup, setPiecesOfTrashLookup] = useState<Record<number, TrashItem>>(piecesOfTrash.reduce((acc, _: string, index: number): Record<number, TrashItem> => {
         acc[index] = { hasPickedUp: false, shouldShow: false };
         return acc;
     }, {} as Record<number, TrashItem>))
+            const trashLeft = Object.values(piecesOfTrashLookup).some(x => x.hasPickedUp === false);
 
     const handleClick = (index: number) => {
         startTransition(() => {
@@ -29,27 +30,42 @@ export const NotInMyBackyard = () => {
         })
     }
 
+    function getTrashStatusIndexes(piecesOfTrashLookup: Record<number, TrashItem>): [number[], number[]] {
+        return Object.values(piecesOfTrashLookup).reduce((acc, item, index) => {
+            if (item.shouldShow) {
+                acc[0].push(index);
+            } else {
+                acc[1].push(index);
+            }
+            return acc;
+        }, [[], []] as [number[], number[]]);
+    }
     useEffect(() => {
+        const trashLeft = Object.values(piecesOfTrashLookup).some(x => x.hasPickedUp === false);
+        if (!trashLeft) return;
         const interval = setInterval(() => {
-            startTransition(() => {
-                setPiecesOfTrashLookup(s => {
-                    const newState = { ...s };
-                    const hiddenTrashIndexes = Object.entries(newState).filter(([_, v]) => !v.shouldShow).map(([k, _]) => Number(k));
-                    if (hiddenTrashIndexes.length === 0) {
-                        return newState;
-                    }
+            const [shownTrashIndexes, hiddenTrashIndexes] = getTrashStatusIndexes(piecesOfTrashLookup);
+            setPiecesOfTrashLookup(s => {
+                const newState = { ...s };
+                if (Math.random() < 0.8 && hiddenTrashIndexes.length > 0) {
                     const randomIndex = hiddenTrashIndexes[Math.floor(Math.random() * hiddenTrashIndexes.length)];
                     newState[randomIndex].shouldShow = true;
-                    return newState;
-                })
+                }
+                //20 percent chance to hide a shown trash piece
+                if (Math.random() < 0.2 && shownTrashIndexes.length > 0) {
+                    const randomShownIndex = shownTrashIndexes[Math.floor(Math.random() * shownTrashIndexes.length)]
+                    newState[randomShownIndex].shouldShow = false;
+                }
+                return newState;
             })
         }, 100)
 
-        return () => clearInterval(interval);
-    }, [])
+        return () => clearInterval && clearInterval(interval);
+    }, [piecesOfTrashLookup]);
 
     const currentScore = Object.values(piecesOfTrashLookup).filter(t => t.hasPickedUp).length;
 
+    if(!trashLeft) return <div>Game Over - Score {currentScore}</div>
     return <>
         <div>{currentScore}</div>
         <div style={{ minHeight: "320px" }} className="grid grid-cols-10 justify-items-center">
