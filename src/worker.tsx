@@ -6,6 +6,7 @@ import { setCommonHeaders } from "@/app/headers";
 import { Home } from "@/app/pages/Home";
 import ActivityDemoPage from "./app/pages/ActivityDemo/ActivityDemoPage";
 import PokemonAsyncReactPage from "./app/pages/PokemonAsyncReact/PokemonAsyncReactPage";
+import { NotInMyBackyardPage } from "./app/pages/NotInMyBackyard/NotInMyBackyardPage";
 
 export type AppContext = {};
 
@@ -17,5 +18,6 @@ export default defineApp([
   },
   render(Document, [route("/", Home)]),
   route("/activityDemo", [ActivityDemoPage]),
-  route("/pokemonAsyncReact", [PokemonAsyncReactPage])
+  route("/pokemonAsyncReact", [PokemonAsyncReactPage]),
+  route("/notInMyBackyard", [NotInMyBackyardPage])
 ]);
