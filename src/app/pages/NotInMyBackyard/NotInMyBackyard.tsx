@@ -12,7 +12,9 @@ const randomTrashType = () => {
     return types[Math.floor(Math.random() * types.length)];
 }
 
+const TIME_LIMIT = 41
 export const NotInMyBackyard = () => {
+    const [gameStarting, setGameStarting] = useState(false)
     const piecesOfTrash = useMemo<TrashType[]>(() => Array.from({ length: 100 }, (_, i) => randomTrashType()), []);
     const [piecesOfTrashLookup, setPiecesOfTrashLookup] = useState<Record<number, TrashItem>>(piecesOfTrash.reduce((acc, _: string, index: number): Record<number, TrashItem> => {
         acc[index] = { hasPickedUp: false, shouldShow: false };
@@ -63,36 +65,37 @@ export const NotInMyBackyard = () => {
     })
 
     const onUpdateTime = useEffectEvent(() => {
-        if(timerTime < 7) setTimerTime(s => s + 1)
+        if(timerTime < TIME_LIMIT) setTimerTime(s => s + 1)
     })
 
-    // useEffect(() => {
-    //     const timeout = setTimeout(() => {
-    //         setTimeIsUp(true)
-    //     }, 7000)
-    //     return () => timeout && clearTimeout(timeout)
-    // }, [])
+    useEffect(() => {
+        if(!gameStarting) return;
+        const timeout = setTimeout(() => {
+            setTimeIsUp(true)
+        }, TIME_LIMIT * 1000)
+        return () => timeout && clearTimeout(timeout)
+    }, [])
 
     useEffect(() => {
         const interval = setInterval(() => {
             onUpdatePieces()
         }, 100)
 
-        // const timeInterval = setInterval(() => {
-        //     onUpdateTime()
-        // }, 1000)
+        const timeInterval = setInterval(() => {
+            onUpdateTime()
+        }, 1000)
 
         return () => {
             interval && clearInterval(interval)
-            // timeInterval && clearInterval(timeInterval)
+            timeInterval && clearInterval(timeInterval)
         }
     }, []);
     
     const currentScore = Object.values(piecesOfTrashLookup).filter(t => t.hasPickedUp).length;
-    
-    if (!trashLeft || 7- timerTime == 0) return <div>Game Over - Score {currentScore}</div>
+    if(!gameStarting) return <div><button onClick={() => setGameStarting(true)}>Start Game</button></div>
+    if (!trashLeft || TIME_LIMIT - timerTime == 0) return <div>Game Over - Score {currentScore}</div>
     return <>
-        {/* <div>{7 - timerTime}</div> */}
+        <div>{TIME_LIMIT - timerTime}</div>
         <div>{currentScore}</div>
         <div style={{ minHeight: "320px" }} className="grid grid-cols-10 justify-items-center">
             {piecesOfTrash.map((_, x) => <div style={{ height: "32px", width: "32px" }} key={x}>{!piecesOfTrashLookup[x].hasPickedUp && piecesOfTrashLookup[x].shouldShow && <div className="cursor-pointer hover:bg-slate-300"><PieceOfTrash onClick={() => handleClick(x)} trashType={_} number={x} /></div>}</div>)}
