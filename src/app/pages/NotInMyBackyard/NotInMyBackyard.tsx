@@ -1,5 +1,5 @@
 'use client';
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState, useEffectEvent } from "react";
 import { PieceOfTrash } from "./components/PieceOfTrash/PieceOfTrash";
 import { TrashType } from "./components/PieceOfTrash/Trash";
 
@@ -13,12 +13,14 @@ const randomTrashType = () => {
 }
 
 export const NotInMyBackyard = () => {
-    const piecesOfTrash = useMemo<TrashType[]>(() => Array.from({ length: 10 }, (_, i) => randomTrashType()), []);
+    const piecesOfTrash = useMemo<TrashType[]>(() => Array.from({ length: 100 }, (_, i) => randomTrashType()), []);
     const [piecesOfTrashLookup, setPiecesOfTrashLookup] = useState<Record<number, TrashItem>>(piecesOfTrash.reduce((acc, _: string, index: number): Record<number, TrashItem> => {
         acc[index] = { hasPickedUp: false, shouldShow: false };
         return acc;
     }, {} as Record<number, TrashItem>))
-            const trashLeft = Object.values(piecesOfTrashLookup).some(x => x.hasPickedUp === false);
+    const [timeIsUp, setTimeIsUp] = useState(false)
+    const [timerTime, setTimerTime] = useState(0)
+    const trashLeft = Object.values(piecesOfTrashLookup).some(x => x.hasPickedUp === false);
 
     const handleClick = (index: number) => {
         startTransition(() => {
@@ -40,33 +42,57 @@ export const NotInMyBackyard = () => {
             return acc;
         }, [[], []] as [number[], number[]]);
     }
-    useEffect(() => {
+
+    const onUpdatePieces = useEffectEvent(() => {
         const trashLeft = Object.values(piecesOfTrashLookup).some(x => x.hasPickedUp === false);
         if (!trashLeft) return;
+        const [shownTrashIndexes, hiddenTrashIndexes] = getTrashStatusIndexes(piecesOfTrashLookup);
+        setPiecesOfTrashLookup(s => {
+            const newState = { ...s };
+            if (Math.random() < 0.8 && hiddenTrashIndexes.length > 0) {
+                const randomIndex = hiddenTrashIndexes[Math.floor(Math.random() * hiddenTrashIndexes.length)];
+                newState[randomIndex].shouldShow = true;
+            }
+            //20 percent chance to hide a shown trash piece
+            if (Math.random() < 0.2 && shownTrashIndexes.length > 0) {
+                const randomShownIndex = shownTrashIndexes[Math.floor(Math.random() * shownTrashIndexes.length)]
+                newState[randomShownIndex].shouldShow = false;
+            }
+            return newState;
+        })
+    })
+
+    const onUpdateTime = useEffectEvent(() => {
+        if(timerTime < 7) setTimerTime(s => s + 1)
+    })
+
+    // useEffect(() => {
+    //     const timeout = setTimeout(() => {
+    //         setTimeIsUp(true)
+    //     }, 7000)
+    //     return () => timeout && clearTimeout(timeout)
+    // }, [])
+
+    useEffect(() => {
         const interval = setInterval(() => {
-            const [shownTrashIndexes, hiddenTrashIndexes] = getTrashStatusIndexes(piecesOfTrashLookup);
-            setPiecesOfTrashLookup(s => {
-                const newState = { ...s };
-                if (Math.random() < 0.8 && hiddenTrashIndexes.length > 0) {
-                    const randomIndex = hiddenTrashIndexes[Math.floor(Math.random() * hiddenTrashIndexes.length)];
-                    newState[randomIndex].shouldShow = true;
-                }
-                //20 percent chance to hide a shown trash piece
-                if (Math.random() < 0.2 && shownTrashIndexes.length > 0) {
-                    const randomShownIndex = shownTrashIndexes[Math.floor(Math.random() * shownTrashIndexes.length)]
-                    newState[randomShownIndex].shouldShow = false;
-                }
-                return newState;
-            })
+            onUpdatePieces()
         }, 100)
 
-        return () => clearInterval && clearInterval(interval);
-    }, [piecesOfTrashLookup]);
+        // const timeInterval = setInterval(() => {
+        //     onUpdateTime()
+        // }, 1000)
 
+        return () => {
+            interval && clearInterval(interval)
+            // timeInterval && clearInterval(timeInterval)
+        }
+    }, []);
+    
     const currentScore = Object.values(piecesOfTrashLookup).filter(t => t.hasPickedUp).length;
-
-    if(!trashLeft) return <div>Game Over - Score {currentScore}</div>
+    
+    if (!trashLeft || 7- timerTime == 0) return <div>Game Over - Score {currentScore}</div>
     return <>
+        {/* <div>{7 - timerTime}</div> */}
         <div>{currentScore}</div>
         <div style={{ minHeight: "320px" }} className="grid grid-cols-10 justify-items-center">
             {piecesOfTrash.map((_, x) => <div style={{ height: "32px", width: "32px" }} key={x}>{!piecesOfTrashLookup[x].hasPickedUp && piecesOfTrashLookup[x].shouldShow && <div className="cursor-pointer hover:bg-slate-300"><PieceOfTrash onClick={() => handleClick(x)} trashType={_} number={x} /></div>}</div>)}
