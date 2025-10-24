@@ -11,15 +11,7 @@ export const Document: React.FC<{ children: React.ReactNode }> = ({
       <link rel="modulepreload" href="/src/client.tsx" />
       <link rel="stylesheet" href={styles} />
     </head>
-    <body>
-      {/* <a
-        href="/"
-        className="fixed left-4 top-4 z-50 inline-flex items-center px-3 py-1.5 bg-white text-slate-800 rounded-md shadow-sm"
-        aria-label="Home"
-      >
-        Home
-      </a> */}
-      <div id="root">{children}</div>
+    <body>      <div id="root">{children}</div>
       <script>import("/src/client.tsx")</script>
     </body>
   </html>
